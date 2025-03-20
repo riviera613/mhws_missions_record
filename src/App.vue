@@ -26,38 +26,49 @@
       <template #bigMissions="{ row, index }">
         <!-- 大金冠任务列表 -->
         <div v-for="(mission, i) in row.bigMissions">
-          <div v-if="mission.count > 0" style="padding: 4px; margin: 4px; border: 1px solid #dcdee2">
+          <div v-if="mission.count > 0" style="padding: 4px; margin: 4px 0 4px 0; border: 1px solid #dcdee2;">
             <!-- 单个任务信息 -->
             <Icon type="md-star" /><span>{{ mission.star }}</span>&nbsp;
             <Tag :color="TYPE_COLOR_MAP[mission.type]">{{ TYPE_MAP[mission.type] }}</Tag>
             <Tag v-if="mission.place" :color="PLACE_COLOR_MAP[mission.place]">{{ PLACE_MAP[mission.place] }}</Tag>
             <Tag v-else>未记录地区</Tag>
-            <Button size="small" style="font-size: 12px; float: right;" @click="clickCountButton(2, index, i)">
+            <!-- 剩余任务次数按钮，每次点击减少一次 -->
+            <Button size="small" style="font-size: 12px; margin-left: 4px;" @click="clickCountButton(BIG, index, i)">
               {{ mission.count }}次
+            </Button>
+            <!-- 关闭任务按钮 -->
+            <Button size="small" type="warning" ghost shape="circle" style="float: right;"
+              @click="clickCloseButton(BIG, index, i)">
+              <Icon type="md-close" />
             </Button>
           </div>
         </div>
-        <!-- 新增任务按钮 -->
-        <Button type="default" shape="circle" size="small" :disabled="row.disabled"
-          @click="openAddModal(2, index, row.name)">
-          <Icon type="md-add" />
-        </Button>
       </template>
       <!-- 小金冠任务列表 -->
       <template #smallMissions="{ row, index }">
         <div v-for="(mission, i) in row.smallMissions">
-          <div v-if="mission.count > 0" style="padding: 4px; margin: 4px; border: 1px solid #dcdee2">
+          <div v-if="mission.count > 0" style="padding: 4px; margin: 4px 0 4px 0; border: 1px solid #dcdee2;">
+            <!-- 单个任务信息 -->
             <Icon type="md-star" /><span>{{ mission.star }}</span>&nbsp;
             <Tag :color="TYPE_COLOR_MAP[mission.type]">{{ TYPE_MAP[mission.type] }}</Tag>
             <Tag v-if="mission.place" :color="PLACE_COLOR_MAP[mission.place]">{{ PLACE_MAP[mission.place] }}</Tag>
             <Tag v-else>未记录地区</Tag>
-            <Button size="small" style="font-size: 12px; float: right;" @click="clickCountButton(1, index, i)">
+            <!-- 剩余任务次数按钮，每次点击减少一次 -->
+            <Button size="small" style="font-size: 12px; margin-left: 4px;" @click="clickCountButton(SMALL, index, i)">
               {{ mission.count }}次
+            </Button>
+            <!-- 关闭任务按钮 -->
+            <Button size="small" type="warning" ghost shape="circle" style="float: right;"
+              @click="clickCloseButton(SMALL, index, i)">
+              <Icon type="md-close" />
             </Button>
           </div>
         </div>
-        <Button type="default" shape="circle" size="small" :disabled="row.disabled"
-          @click="openAddModal(1, index, row.name)">
+      </template>
+      <!-- 新增任务 -->
+      <template #add="{ row, index }">
+        <Button type="primary" ghost shape="circle" size="small" :disabled="row.disabled"
+          @click="openAddModal(index, row.name)">
           <Icon type="md-add" />
         </Button>
       </template>
@@ -72,8 +83,10 @@
         {{ addModal.form.name }}
       </FormItem>
       <FormItem label="大小" prop="bigOrSmall">
-        <p v-if="addModal.form.bigOrSmall === 2">大金冠</p>
-        <p v-else-if="addModal.form.bigOrSmall === 1">小金冠</p>
+        <RadioGroup v-model="addModal.form.bigOrSmall" type="button">
+          <Radio :label="BIG" :key="BIG">大金冠</Radio>
+          <Radio :label="SMALL" :key="SMALL">小金冠</Radio>
+        </RadioGroup>
       </FormItem>
       <FormItem label="星级">
         <Rate v-model="addModal.form.star" :count="5" icon="md-star"></Rate>
@@ -106,16 +119,19 @@ export default {
           title: '怪物',
           key: 'name',
           slot: 'name',
+          maxWidth: 300,
         },
         {
           title: '大金冠',
           key: 'bigFlag',
           slot: 'bigFlag',
+          maxWidth: 100,
         },
         {
           title: '小金冠',
           key: 'smallFlag',
           slot: 'smallFlag',
+          maxWidth: 100,
         },
         {
           title: '大金冠任务',
@@ -126,6 +142,12 @@ export default {
           title: '小金冠任务',
           key: 'smallMissions',
           slot: 'smallMissions',
+        },
+        {
+          title: '新增',
+          key: 'add',
+          slot: 'add',
+          maxWidth: 100,
         }
       ],
       data: [
@@ -135,7 +157,7 @@ export default {
         display: false,
         form: {
           name: '',
-          bigOrSmall: 0,
+          bigOrSmall: '',
           star: 3,
           type: '',
           place: '',
@@ -143,6 +165,9 @@ export default {
         index: 0,
       },
       addModalFormValidate: {
+        bigOrSmall: [
+          { type: 'number', required: true, message: 'Can not be empty', trigger: 'blur' }
+        ],
         type: [
           { required: true, message: 'Can not be empty', trigger: 'blur' }
         ],
@@ -164,12 +189,18 @@ export default {
     },
     MONSTER_LIST() {
       return MONSTER_LIST;
+    },
+    BIG() {
+      return 2;
+    },
+    SMALL() {
+      return 1;
     }
   },
   methods: {
     // 任务计数按钮响应
     clickCountButton(bigOrSmall, index, i) {
-      if (bigOrSmall === 2) {
+      if (bigOrSmall === this.BIG) {
         // 每点击一次代表任务被使用一次，次数-1
         this.data[index].bigMissions[i].count -= 1;
         if (this.data[index].bigMissions[i].count === 0) {
@@ -177,7 +208,7 @@ export default {
           this.data[index].bigMissions.splice(i, 1);
           this.$Message.info('任务次数已清零');
         }
-      } else if (bigOrSmall === 1) {
+      } else if (bigOrSmall === this.SMALL) {
         this.data[index].smallMissions[i].count -= 1;
         if (this.data[index].smallMissions[i].count === 0) {
           this.data[index].smallMissions.splice(i, 1);
@@ -186,12 +217,23 @@ export default {
       }
       this.saveToLocalStorage();
     },
+    // 关闭任务按钮
+    clickCloseButton(bigOrSmall, index, i) {
+      if (bigOrSmall === this.BIG) {
+        this.data[index].bigMissions.splice(i, 1);
+        this.$Message.info('任务已关闭');
+      } else if (bigOrSmall === this.SMALL) {
+        this.data[index].smallMissions.splice(i, 1);
+        this.$Message.info('任务已关闭');
+      }
+      this.saveToLocalStorage();
+    },
     // 打开新增任务表单对话框
-    openAddModal(bigOrSmall, index, name) {
+    openAddModal(index, name) {
       this.addModal.display = true;
       this.addModal.form = {
         name: name,
-        bigOrSmall: bigOrSmall,
+        bigOrSmall: '',
         star: 3,
         type: '',
         place: '',
@@ -211,9 +253,9 @@ export default {
           type: this.addModal.form.type,
           place: this.addModal.form.place,
         };
-        if (this.addModal.form.bigOrSmall === 2) {
+        if (this.addModal.form.bigOrSmall === this.BIG) {
           this.data[this.addModal.index].bigMissions.push(newMission);
-        } else if (this.addModal.form.bigOrSmall === 1) {
+        } else if (this.addModal.form.bigOrSmall === this.SMALL) {
           this.data[this.addModal.index].smallMissions.push(newMission);
         }
         this.addModal.display = false;
