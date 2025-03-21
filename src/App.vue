@@ -10,78 +10,76 @@
     </template>
     <template #action>
       <Poptip placement="bottom-end">
-        <Button type="text" shape="circle" style="font-size: 20px;">
+        <Button type="text" shape="circle" style="font-size: 20px; margin-right: 8px;">
           <Icon type="ios-help-circle-outline" />
         </Button>
         <template #content>数据存储在浏览器缓存中</template>
       </Poptip>
-      <Button type="primary" @click="openAddModal" style="margin-left: 8px;">
+      <Button type="primary" @click="openAddModal" style="margin-right: 8px;">
         <Icon type="md-add" />新增任务
       </Button>
-      <Button type="warning" @click="clearLocalStorage" style="margin-left: 8px;">
+      <Button type="warning" @click="clearLocalStorage">
         <Icon type="md-trash" />清空数据
       </Button>
     </template>
   </PageHeader>
-  <Card style="margin: 16px 32px 0 32px;">
-    <!-- 主表格 -->
-    <Table border stripe :columns="columns" :data="data">
-      <template #name="{ row, index }">
-        <div class="name-pic-cell">
-          <img :src="row.pic" style="width: 40px; margin-right: 16px;">
-          <span>{{ row.name }}</span>&nbsp;
+  <!-- 主表格 -->
+  <Table border stripe :columns="columns" :data="data" :width="tableWidth" style="margin: 16px 32px 0 32px;">
+    <template #name="{ row, index }">
+      <div class="name-pic-cell">
+        <img :src="row.pic" style="width: 40px; margin-right: 16px;">
+        <span>{{ row.name }}</span>&nbsp;
+      </div>
+    </template>
+    <template #bigFlag="{ row, index }">
+      <Checkbox v-model="data[index].bigFlag" :disabled="row.disabled" @on-change="saveToLocalStorage"></Checkbox>
+    </template>
+    <template #smallFlag="{ row, index }">
+      <Checkbox v-model="data[index].smallFlag" :disabled="row.disabled" @on-change="saveToLocalStorage"></Checkbox>
+    </template>
+    <template #bigMissions="{ row, index }">
+      <!-- 大金冠任务列表 -->
+      <div v-for="(mission, i) in row.bigMissions">
+        <div v-if="mission.count > 0" style="padding: 4px; margin: 4px 0 4px 0; border: 1px solid #dcdee2;">
+          <!-- 单个任务信息 -->
+          <Icon type="md-star" /><span>{{ mission.star }}</span>&nbsp;
+          <Tag :color="TYPE_COLOR_MAP[mission.type]">{{ TYPE_MAP[mission.type] }}</Tag>
+          <Tag v-if="mission.place" :color="PLACE_COLOR_MAP[mission.place]">{{ PLACE_MAP[mission.place] }}</Tag>
+          <Tag v-else>未记录地区</Tag>
+          <!-- 剩余任务次数按钮，每次点击减少一次 -->
+          <Button size="small" style="font-size: 12px; margin-left: 4px;" @click="clickCountButton(BIG, index, i)">
+            {{ mission.count }}次
+          </Button>
+          <!-- 关闭任务按钮 -->
+          <Button size="small" type="warning" ghost shape="circle" style="float: right;"
+            @click="clickCloseButton(BIG, index, i)">
+            <Icon type="md-close" />
+          </Button>
         </div>
-      </template>
-      <template #bigFlag="{ row, index }">
-        <Checkbox v-model="data[index].bigFlag" :disabled="row.disabled" @on-change="saveToLocalStorage"></Checkbox>
-      </template>
-      <template #smallFlag="{ row, index }">
-        <Checkbox v-model="data[index].smallFlag" :disabled="row.disabled" @on-change="saveToLocalStorage"></Checkbox>
-      </template>
-      <template #bigMissions="{ row, index }">
-        <!-- 大金冠任务列表 -->
-        <div v-for="(mission, i) in row.bigMissions">
-          <div v-if="mission.count > 0" style="padding: 4px; margin: 4px 0 4px 0; border: 1px solid #dcdee2;">
-            <!-- 单个任务信息 -->
-            <Icon type="md-star" /><span>{{ mission.star }}</span>&nbsp;
-            <Tag :color="TYPE_COLOR_MAP[mission.type]">{{ TYPE_MAP[mission.type] }}</Tag>
-            <Tag v-if="mission.place" :color="PLACE_COLOR_MAP[mission.place]">{{ PLACE_MAP[mission.place] }}</Tag>
-            <Tag v-else>未记录地区</Tag>
-            <!-- 剩余任务次数按钮，每次点击减少一次 -->
-            <Button size="small" style="font-size: 12px; margin-left: 4px;" @click="clickCountButton(BIG, index, i)">
-              {{ mission.count }}次
-            </Button>
-            <!-- 关闭任务按钮 -->
-            <Button size="small" type="warning" ghost shape="circle" style="float: right;"
-              @click="clickCloseButton(BIG, index, i)">
-              <Icon type="md-close" />
-            </Button>
-          </div>
+      </div>
+    </template>
+    <!-- 小金冠任务列表 -->
+    <template #smallMissions="{ row, index }">
+      <div v-for="(mission, i) in row.smallMissions">
+        <div v-if="mission.count > 0" style="padding: 4px; margin: 4px 0 4px 0; border: 1px solid #dcdee2;">
+          <!-- 单个任务信息 -->
+          <Icon type="md-star" /><span>{{ mission.star }}</span>&nbsp;
+          <Tag :color="TYPE_COLOR_MAP[mission.type]">{{ TYPE_MAP[mission.type] }}</Tag>
+          <Tag v-if="mission.place" :color="PLACE_COLOR_MAP[mission.place]">{{ PLACE_MAP[mission.place] }}</Tag>
+          <Tag v-else>未记录地区</Tag>
+          <!-- 剩余任务次数按钮，每次点击减少一次 -->
+          <Button size="small" style="font-size: 12px; margin-left: 4px;" @click="clickCountButton(SMALL, index, i)">
+            {{ mission.count }}次
+          </Button>
+          <!-- 关闭任务按钮 -->
+          <Button size="small" type="warning" ghost shape="circle" style="float: right;"
+            @click="clickCloseButton(SMALL, index, i)">
+            <Icon type="md-close" />
+          </Button>
         </div>
-      </template>
-      <!-- 小金冠任务列表 -->
-      <template #smallMissions="{ row, index }">
-        <div v-for="(mission, i) in row.smallMissions">
-          <div v-if="mission.count > 0" style="padding: 4px; margin: 4px 0 4px 0; border: 1px solid #dcdee2;">
-            <!-- 单个任务信息 -->
-            <Icon type="md-star" /><span>{{ mission.star }}</span>&nbsp;
-            <Tag :color="TYPE_COLOR_MAP[mission.type]">{{ TYPE_MAP[mission.type] }}</Tag>
-            <Tag v-if="mission.place" :color="PLACE_COLOR_MAP[mission.place]">{{ PLACE_MAP[mission.place] }}</Tag>
-            <Tag v-else>未记录地区</Tag>
-            <!-- 剩余任务次数按钮，每次点击减少一次 -->
-            <Button size="small" style="font-size: 12px; margin-left: 4px;" @click="clickCountButton(SMALL, index, i)">
-              {{ mission.count }}次
-            </Button>
-            <!-- 关闭任务按钮 -->
-            <Button size="small" type="warning" ghost shape="circle" style="float: right;"
-              @click="clickCloseButton(SMALL, index, i)">
-              <Icon type="md-close" />
-            </Button>
-          </div>
-        </div>
-      </template>
-    </Table>
-  </Card>
+      </div>
+    </template>
+  </Table>
 
   <!-- 新增任务表单 -->
   <Modal v-model="addModal.display" title="新增任务">
@@ -205,6 +203,14 @@ export default {
     },
     SMALL() {
       return 1;
+    },
+    tableWidth() {
+      if (window.screen.width < window.screen.height) {
+        let screenWidth = window.screen.width;
+        return screenWidth > 1000 ? screenWidth : 1000;
+      } else {
+        return '';
+      }
     }
   },
   methods: {
