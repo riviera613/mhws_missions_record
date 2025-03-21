@@ -1,14 +1,29 @@
 <template>
-  <Card style="margin: 32px 48px 0 48px;">
+  <PageHeader style="padding: 0 32px 0 32px">
     <template #title>
-      <b>大小金冠及任务记录</b>
+      <b>MHWs大小金冠及任务记录</b>
     </template>
-    <template #extra>
-      <Button size="small" type="warning" @click="clearLocalStorage" style="font-size: 12px;">
+    <template #logo>
+      <a href="https://github.com/riviera613/mhws_missions_record" target="_blank">
+        <Icon type="logo-github" style="font-size: 24px;" />
+      </a>
+    </template>
+    <template #action>
+      <Poptip placement="bottom-end">
+        <Button type="text" shape="circle" style="font-size: 20px;">
+          <Icon type="ios-help-circle-outline" />
+        </Button>
+        <template #content>数据存储在浏览器缓存中</template>
+      </Poptip>
+      <Button type="primary" @click="openAddModal" style="margin-left: 8px;">
+        <Icon type="md-add" />新增任务
+      </Button>
+      <Button type="warning" @click="clearLocalStorage" style="margin-left: 8px;">
         <Icon type="md-trash" />清空数据
       </Button>
     </template>
-
+  </PageHeader>
+  <Card style="margin: 16px 32px 0 32px;">
     <!-- 主表格 -->
     <Table border stripe :columns="columns" :data="data">
       <template #name="{ row, index }">
@@ -65,13 +80,6 @@
           </div>
         </div>
       </template>
-      <!-- 新增任务 -->
-      <template #add="{ row, index }">
-        <Button type="primary" ghost shape="circle" size="small" :disabled="row.disabled"
-          @click="openAddModal(index, row.name)">
-          <Icon type="md-add" />
-        </Button>
-      </template>
     </Table>
   </Card>
 
@@ -80,7 +88,12 @@
     <Form :label-width="80" label-position="left" :model="addModal.form" ref="addModalForm"
       :rules="addModalFormValidate">
       <FormItem label="名称" prop="name">
-        {{ addModal.form.name }}
+        <Select v-model="addModal.form.name">
+          <Option v-for="monster in MONSTER_LIST" :disabled="monster.disabled" :value="monster.name"
+            :label="monster.name">
+            {{
+              monster.name }}</Option>
+        </Select>
       </FormItem>
       <FormItem label="大小" prop="bigOrSmall">
         <RadioGroup v-model="addModal.form.bigOrSmall" type="button">
@@ -142,12 +155,6 @@ export default {
           title: '小金冠任务',
           key: 'smallMissions',
           slot: 'smallMissions',
-        },
-        {
-          title: '新增',
-          key: 'add',
-          slot: 'add',
-          maxWidth: 100,
         }
       ],
       data: [
@@ -165,6 +172,9 @@ export default {
         index: 0,
       },
       addModalFormValidate: {
+        name: [
+          { required: true, message: 'Can not be empty', trigger: 'blur' }
+        ],
         bigOrSmall: [
           { type: 'number', required: true, message: 'Can not be empty', trigger: 'blur' }
         ],
@@ -229,16 +239,15 @@ export default {
       this.saveToLocalStorage();
     },
     // 打开新增任务表单对话框
-    openAddModal(index, name) {
+    openAddModal() {
       this.addModal.display = true;
       this.addModal.form = {
-        name: name,
+        name: '',
         bigOrSmall: '',
         star: 3,
         type: '',
         place: '',
       };
-      this.addModal.index = index;
     },
     // 新增任务提交
     addModalSubmit() {
@@ -253,10 +262,21 @@ export default {
           type: this.addModal.form.type,
           place: this.addModal.form.place,
         };
+        let index = -1;
+        for (let i in this.data) {
+          if (this.data[i].name === this.addModal.form.name) {
+            index = i;
+            break;
+          }
+        }
+        if (index < 0) {
+          this.$Message.error('怪物名错误');
+          return;
+        }
         if (this.addModal.form.bigOrSmall === this.BIG) {
-          this.data[this.addModal.index].bigMissions.push(newMission);
+          this.data[index].bigMissions.push(newMission);
         } else if (this.addModal.form.bigOrSmall === this.SMALL) {
-          this.data[this.addModal.index].smallMissions.push(newMission);
+          this.data[index].smallMissions.push(newMission);
         }
         this.addModal.display = false;
         this.saveToLocalStorage();
@@ -280,7 +300,7 @@ export default {
           return;
         }
       });
-    }
+    },
   },
   mounted() {
     // 启动时，从浏览器缓存中读取数据
@@ -306,5 +326,9 @@ export default {
   display: flex;
   /* justify-content: center; */
   align-items: center;
+}
+
+a:not(:hover) {
+  color: black;
 }
 </style>
