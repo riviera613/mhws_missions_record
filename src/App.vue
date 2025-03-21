@@ -86,7 +86,7 @@
     <Form :label-width="80" label-position="left" :model="addModal.form" ref="addModalForm"
       :rules="addModalFormValidate">
       <FormItem label="名称" prop="name">
-        <Select v-model="addModal.form.name">
+        <Select v-model="addModal.form.name" filterable>
           <Option v-for="monster in MONSTER_LIST" :disabled="monster.disabled" :value="monster.name"
             :label="monster.name">
             {{
@@ -108,7 +108,7 @@
         </RadioGroup>
       </FormItem>
       <FormItem label="地区" prop="place">
-        <Select v-model="addModal.form.place" prop="place">
+        <Select v-model="addModal.form.place" prop="place" filterable>
           <Option v-for="(v, k) in PLACE_MAP" :value="k" :label="v">{{ v }}</Option>
         </Select>
       </FormItem>
