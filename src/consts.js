@@ -1,3 +1,6 @@
+export const BIG = 2;
+export const SMALL = 1;
+
 export const TYPE_MAP = {
     1: '普通',
     2: '历战',

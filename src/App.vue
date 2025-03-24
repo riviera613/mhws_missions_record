@@ -86,7 +86,7 @@
 </template>
 
 <script>
-import { TYPE_MAP, TYPE_COLOR_MAP, PLACE_MAP, PLACE_COLOR_MAP, MONSTER_LIST } from './consts.js'
+import { BIG, SMALL, TYPE_MAP, PLACE_MAP, MONSTER_LIST } from './consts.js'
 import MissionList from './components/MissionList.vue';
 const LOCAL_STORAGE_KEY = 'mhws_crowns_mission';
 export default {
@@ -156,23 +156,17 @@ export default {
     TYPE_MAP() {
       return TYPE_MAP;
     },
-    TYPE_COLOR_MAP() {
-      return TYPE_COLOR_MAP;
-    },
     PLACE_MAP() {
       return PLACE_MAP;
-    },
-    PLACE_COLOR_MAP() {
-      return PLACE_COLOR_MAP;
     },
     MONSTER_LIST() {
       return MONSTER_LIST;
     },
     BIG() {
-      return 2;
+      return BIG;
     },
     SMALL() {
-      return 1;
+      return SMALL;
     },
     tableWidth() {
       if (window.screen.width < window.screen.height) {
