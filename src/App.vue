@@ -39,45 +39,11 @@
     </template>
     <template #bigMissions="{ row, index }">
       <!-- 大金冠任务列表 -->
-      <div v-for="(mission, i) in row.bigMissions">
-        <div v-if="mission.count > 0" style="padding: 4px; margin: 4px 0 4px 0; border: 1px solid #dcdee2;">
-          <!-- 单个任务信息 -->
-          <Icon type="md-star" /><span>{{ mission.star }}</span>&nbsp;
-          <Tag :color="TYPE_COLOR_MAP[mission.type]">{{ TYPE_MAP[mission.type] }}</Tag>
-          <Tag v-if="mission.place" :color="PLACE_COLOR_MAP[mission.place]">{{ PLACE_MAP[mission.place] }}</Tag>
-          <Tag v-else>未记录地区</Tag>
-          <!-- 剩余任务次数按钮，每次点击减少一次 -->
-          <Button size="small" style="font-size: 12px; margin-left: 4px;" @click="clickCountButton(BIG, index, i)">
-            {{ mission.count }}次
-          </Button>
-          <!-- 关闭任务按钮 -->
-          <Button size="small" type="warning" ghost shape="circle" style="float: right;"
-            @click="clickCloseButton(BIG, index, i)">
-            <Icon type="md-close" />
-          </Button>
-        </div>
-      </div>
+      <MissionList :data="row.bigMissions" :index="index" @onUpdate="updateBigMissions"></MissionList>
     </template>
     <!-- 小金冠任务列表 -->
     <template #smallMissions="{ row, index }">
-      <div v-for="(mission, i) in row.smallMissions">
-        <div v-if="mission.count > 0" style="padding: 4px; margin: 4px 0 4px 0; border: 1px solid #dcdee2;">
-          <!-- 单个任务信息 -->
-          <Icon type="md-star" /><span>{{ mission.star }}</span>&nbsp;
-          <Tag :color="TYPE_COLOR_MAP[mission.type]">{{ TYPE_MAP[mission.type] }}</Tag>
-          <Tag v-if="mission.place" :color="PLACE_COLOR_MAP[mission.place]">{{ PLACE_MAP[mission.place] }}</Tag>
-          <Tag v-else>未记录地区</Tag>
-          <!-- 剩余任务次数按钮，每次点击减少一次 -->
-          <Button size="small" style="font-size: 12px; margin-left: 4px;" @click="clickCountButton(SMALL, index, i)">
-            {{ mission.count }}次
-          </Button>
-          <!-- 关闭任务按钮 -->
-          <Button size="small" type="warning" ghost shape="circle" style="float: right;"
-            @click="clickCloseButton(SMALL, index, i)">
-            <Icon type="md-close" />
-          </Button>
-        </div>
-      </div>
+      <MissionList :data="row.smallMissions" :index="index" @onUpdate="updateSmallMissions"></MissionList>
     </template>
   </Table>
 
@@ -121,6 +87,7 @@
 
 <script>
 import { TYPE_MAP, TYPE_COLOR_MAP, PLACE_MAP, PLACE_COLOR_MAP, MONSTER_LIST } from './consts.js'
+import MissionList from './components/MissionList.vue';
 const LOCAL_STORAGE_KEY = 'mhws_crowns_mission';
 export default {
   data() {
@@ -130,7 +97,7 @@ export default {
           title: '怪物',
           key: 'name',
           slot: 'name',
-          maxWidth: 300,
+          maxWidth: 200,
         },
         {
           title: '大金冠',
@@ -182,6 +149,9 @@ export default {
       }
     };
   },
+  components: {
+    MissionList
+  },
   computed: {
     TYPE_MAP() {
       return TYPE_MAP;
@@ -214,34 +184,12 @@ export default {
     }
   },
   methods: {
-    // 任务计数按钮响应
-    clickCountButton(bigOrSmall, index, i) {
-      if (bigOrSmall === this.BIG) {
-        // 每点击一次代表任务被使用一次，次数-1
-        this.data[index].bigMissions[i].count -= 1;
-        if (this.data[index].bigMissions[i].count === 0) {
-          // 次数为零时删除任务
-          this.data[index].bigMissions.splice(i, 1);
-          this.$Message.info('任务次数已清零');
-        }
-      } else if (bigOrSmall === this.SMALL) {
-        this.data[index].smallMissions[i].count -= 1;
-        if (this.data[index].smallMissions[i].count === 0) {
-          this.data[index].smallMissions.splice(i, 1);
-          this.$Message.info('任务次数已清零');
-        }
-      }
+    updateBigMissions(data, index) {
+      this.data[index].bigMissions = data;
       this.saveToLocalStorage();
     },
-    // 关闭任务按钮
-    clickCloseButton(bigOrSmall, index, i) {
-      if (bigOrSmall === this.BIG) {
-        this.data[index].bigMissions.splice(i, 1);
-        this.$Message.info('任务已关闭');
-      } else if (bigOrSmall === this.SMALL) {
-        this.data[index].smallMissions.splice(i, 1);
-        this.$Message.info('任务已关闭');
-      }
+    updateSmallMissions(data, index) {
+      this.data[index].smallMissions = data;
       this.saveToLocalStorage();
     },
     // 打开新增任务表单对话框
@@ -290,7 +238,6 @@ export default {
     },
     // 每次操作后，自动存储到浏览器缓存
     saveToLocalStorage() {
-      console.log(this.$data.data);
       localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(this.$data.data));
     },
     // 清空本地数据记录
